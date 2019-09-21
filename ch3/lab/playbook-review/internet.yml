@@ -1,0 +1,85 @@
+---
+- name: Enable internet services
+  hosts: serverb.lab.example.com
+  become: true
+  tasks:
+    - name: installed the latest version of firewalld,httpd,mariadb-server,php,php-mysqld
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - firewalld
+          - httpd
+          - mariadb-server
+          - php 
+          - php-mysqlnd
+        state: latest
+
+
+    - name: firewalld service is running and enable
+      service:
+        name: firewalld
+        state:  started
+        enabled: true
+
+    - name: httpd service access is allowed
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+      notify:
+       -  restart httpd
+
+    - name: mariadb services are enabled and running
+      service:
+        name:  mariadb
+        enabled: true
+        state: started
+
+    - name: generating web content for testing
+      get_url:
+        url:  "http://workstation.lab.example.com/RHCE/ch3/index.html"
+        dest: /var/www/html/index.html
+        mode: 0644
+  
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+
+- name: test access to web server
+  hosts: localhost
+  tasks:
+    - name: test the web service running on serverb
+      uri:
+        url: http://serverb.lab.example.com
+        status_code: 200
+  
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
