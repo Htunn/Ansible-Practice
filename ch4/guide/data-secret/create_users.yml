@@ -1,0 +1,12 @@
+---
+- name: create user accounts for devservers host group
+  hosts: devservers
+  become: true
+  remote_user: devops
+  vars_files:
+    - secret.yml
+  tasks:
+    - name: creating user from secret.yml
+      user:
+        name: "{{ username }}"
+        password: "{{ pwsh | password_hash('sha512') }}"
