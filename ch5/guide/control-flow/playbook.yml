@@ -1,0 +1,22 @@
+---
+- name: Mariadb server is running
+  hosts:  database_prod
+#  remote_user: devops
+  become: true
+  vars:
+    mariadb_packages:
+      - mariadb-server
+      - python3-PyMySQL
+
+  tasks:
+    - name: Mariadb packages are installed
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ mariadb_packages }}"
+
+    - name: Start Mariadb service
+      service: 
+        name: mariadb
+        state: started
+        enabled: true
