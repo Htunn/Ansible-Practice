@@ -1,0 +1,16 @@
+---
+- name: Remove Apache Web Server
+  hosts:  webservers
+  become: true
+
+  tasks:
+    - name: stopped and disabled httpd service
+      service:
+        name: httpd
+        enabled: no
+        state: stopped
+
+    - name: remove httpd package
+      yum:
+        name: httpd
+        state: absent 

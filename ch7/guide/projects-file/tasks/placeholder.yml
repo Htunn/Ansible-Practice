@@ -1,0 +1,6 @@
+---
+  - name: Create Placeholder file
+    copy: 
+      content:  "{{ ansible_facts['fqdn'] }} has been customized using Ansible.\n"
+      dest: "{{ file }}"
+
