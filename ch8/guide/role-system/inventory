@@ -1,0 +1,9 @@
+[na_datacenter]
+servera.lab.example.com 
+
+[europe_datacenter]
+serverb.lab.example.com
+
+[database_servers:children]
+na_datacenter
+europe_datacenter
