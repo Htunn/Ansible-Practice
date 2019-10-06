@@ -1,0 +1,6 @@
+---
+- name: get facts
+  hosts: servera.lab.example.com
+  tasks:
+   - debug:
+        vars: ansible_facts 

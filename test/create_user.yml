@@ -1,0 +1,24 @@
+---
+- name: create users
+  hosts: all 
+  become: yes
+  vars_files:
+    - user_lists.yml
+    - secrets.yml
+  tasks:
+    - name: create user
+      user:
+        name: "{{ item.name }}"
+        state: present
+        password: "{{ dev_pass | password_hash('sha512') }}"
+      loop: "{{ users }}"
+      when: item.role == "developer" and inventory_hostname in groups['dev']
+
+    - name: create user
+      user:
+        name: "{{ item.name }}"
+        state: present
+        password: "{{ mgr_pass | password_hash('sha512') }}"
+      loop: "{{ users }}"
+      when: item.role == "manager" and inventory_hostname in groups['prod']
+

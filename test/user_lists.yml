@@ -1,0 +1,7 @@
+users:
+  - name: koko
+    role: developer
+  - name: mgmg
+    role: developer
+  - name: kyawkyaw
+    role: manager

@@ -1,0 +1,51 @@
+---
+- name: partitioning lab
+  hosts: serverb.lab.example.com 
+  tasks:
+    - name:  check vdc size and create 3GiB partition
+      block:
+         - name: debug vdc size
+           debug:
+            msg: " ansible_facts['devices']['size']['vdc'] is defined "
+         - name: create 4GB partiton for servera
+           parted:
+            device: /dev/vdc
+            number: 1
+            state: present
+            part_end: 4GiB
+
+         - name: create file system for 4GB partition
+           filesystem: 
+            fstype: xfs
+            dev:  /dev/vdc1
+
+         - name: mount xfs partition in mnt directory
+           mount: 
+             path: /mnt/data
+             src: /dev/vdc1
+             fstype: xfs
+             state: mounted 
+      rescue:
+        - name: debug vdc is defined
+          debug:
+            msg:  " ansible_facts['devices']['size']['vdc'] is defined "
+            
+        - name: create 2GB partiton for servera
+          parted:
+            device: /dev/vdc
+            number: 1
+            state: present
+            part_end: 2GiB
+
+        - name: create file system for 2GB partition
+          filesystem: 
+           fstype: xfs
+           dev:  /dev/vdc1
+
+        - name: mount xfs partition in mnt directory
+          mount: 
+            path: /mnt/data
+            src: /dev/vdc1
+            fstype: xfs
+            state: mounted 
+
