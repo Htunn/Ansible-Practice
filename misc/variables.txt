@@ -1,0 +1,186 @@
+# Variables
+
+- Ansible uses "Variables" to help deal with differences between systems.
+  
+* to understand variables you also need to know "Conditions" and "Loops".Useful things like the 'group_by' module and the 'when' conditional can also be used with 
+  'variables',and to help manage differences between system.
+
+( Creating vaild variable names )
+
+* variables name should start with letters,number and underscores.Variables should always start with a letter.
+
+examp:
+	"foo_port , foo5 "
+
+- YAML also suppports dictionaries which map keys to values.
+
+examp:
+	" foo:            "
+            field1: one
+	    field2: two
+
+*** You can then reference a specific field in the dictionary using either 'bracket notation' or 'dot notation' ***
+
+examp:
+	bracket notation = " foo['field1'] " 
+	dot notation =    " foo.field1 "
+
+$ if you use 'dot notation' be aware that some keys can cause problems because they collides with attributes and methods of python dictionaries.
+$ you should use 'bracket notation' instead of 'dot notation' if you use keys which start and end with "two underscores" ( Those are special reserved for special \
+  meanings in python ) or are any of the known public attributes. " Exam: add,append,hex "
+
+## Using variables with jinja2 ##
+
+- once you've defined variables,you can use them in your playbooks using "jinja2 templating system'
+
+Examp:
+	" My amp goes to {{ max_amp_value }} " # This expression provides the most basic form of variable substitution.
+
+- you can use the same syntax in playbook.
+
+examp:
+	" template: src=foo.cfg.j2 dest={{ remote_install_path }}/foo.cfg "
+
+* here the 'variable' defines the location of a file.which can vary from one system to another.
+
+- Inside a template you automatically have access to all variables that are in scope for a host.Actually it's more than that,you can also read variables about other 
+  hosts.we'll show how to do that in a bit.
+
+!!Note
+
+- Ansible allows " jinja2 loops and conditionals " in templates,but in playbook, we do not use them.
+- Ansible playbooks are " pure machine-parseable YAML ". 
+- This is a rather important feature as it means it is possible to code-generate pieces of files, or to have other ecosystem tools read Ansible files.
+- Not everyone will need this but it can unlock possibilites.
+
+## Transforming variables with jinja2 filters ##
+
+- Jinja2 filters let you transform the value of a variable within a " template expression ".
+- For example, the 'capitalize' filter capitalizes any value passed to it, 'to_yaml' and 'to_json' filters changes the format of your variable value.
+- Jinja2 includes many built-in filters and Ansible supplies many more filters.
+
+
+## Variables discovered from systems:Facts ##
+
+- These are a type of variable that are discovered,not set by the user.
+- Facts are information derived from speaking with your remote systems.
+- You can find a complete set under the 'ansible_facts' variable,most facts are also 'injected' as top level variables preserving the 'ansible_' prefix.
+- Some are drop due to conflits.
+- This can be disabled via the 'INJECT_FACTS_AS_VARS' setting.
+
+- An example of this might be the ip address of the remote host,or what the operating system is.
+- To see what information is available, try the following in a play:
+" - debug: var=ansible_facts "
+
+- To see the 'raw' information as gathered:
+" ansible hostname -m setup "
+
+# Reference facts in a playboom ##
+
+examp:
+	" {{ ansible_facts['devices']['xvda']['model'] }} "  # the model of the first disk
+
+	" {{ ansible_facts['hostname'] }}  # the hostname as the system report
+
+*** Facts are frequently used in 'conditionals' and also in 'templates' ***
+
+- Facts can also be used to create dynamic groups of hosts that match particular criteria.
+
+## Disabling Facts ##
+
+- If you don't need any fact about your hosts,and know everything about your systems centrally,you can turn off 'fact gathering'.
+- This has advantages in scaling Ansible in push mode with very large numbers of systems,mainly,or if you are using ansible on experimental platforms.
+
+examp:
+ " - hosts: all 	"
+	gather_facts: no
+
+### Local facts (facts.d) ###
+
+- Ansibel facts are a way of getting data about remote systems for used in playbook.
+- Usually use 'setup' module to do this.
+- Users can also write custom facts modules, as described in API guide.
+- you can use simple way to provide system or user data for use in ansible without writing a fact module.
+- 'Facts.d' is one mechanism for uses to control some aspect of how their system are managed.
+
+!!Note
+
+- "local facts" is a bit misnomer,t means "locally supplied user values" as opposed to "centrally supplied user values" or what facts are - " locally dynamically 
+   determined values " .
+
+- If a remote managed system has an "/etc/ansible/facts.d" directory,any files in this directory ending in ".fact",can be JSON.INI,or executable files returning JSON,
+and these can supply local facts in Ansible.
+
+_ An alternative directory can be specified using the "fact_path" play keyword.
+
+For Examp:
+ - assume "/etc/ansible/facts.d/preferences.fact" contain :
+
+	[general]
+	asdf=1
+	bar=2
+
+
+
+- This will produce a hash variable fact named 'general' and 'asdf' and 'bar' as members.
+
+- To validate this
+	" ansible hostname -m setup -a 'filter=ansible_local"
+
+	"ansible_local": {
+        "preferences": {
+            "general": {
+                "asdf" : "1",
+                "bar"  : "2"
+            }
+        }
+ }
+
+
+- This data can be accessed in a "template/playbook" as:
+
+	" {{ ansible_local['preferences']['general']['asdf'] }} " 
+
+- The local namespace prevents any user supplied fact from overriding "system facts or variables" defined elsewhere in the playbook. 
+
+!!Note
+
+- The key part in the key=value pairs will be converted into lowercase inside the "ansible_local" variable.
+
+# Caching Facts
+
+- It is possible for one server to reference variables about another
+- Caching facts is useful for very large infrastructure.
+- With fact caching enabled,it is possible for machine in one group to reference variables about machines in the other group,despite the fact they have not been
+  communicated with the current execution of /usr/bin/ansible-playbook
+
+- To benefit from cached facts,you will want to change the 'gathering' setting to 'smart' or 'explicit' or set 'gather_fact' to 'false' in most plays.
+
+
+# Registering Variables 
+
+- Another major use of variables is running a command and registering the result of that command as a variable.
+- When you create a task and save the return value in a variable for use in later tasks,you create a registered variable.
+
+for example:
+	
+- hosts: web_servers
+ 
+  tasks:
+
+     - shell: /usr/bin/foo
+       register: foo_result
+       ignore_errors: True
+
+     - shell: /usr/bin/bar
+       when: foo_result.rc == 5
+
+- Results will vary from module to module.Each module docs includes a RETURN section describing that module's values.
+- To see the values for a particular task,run your playbook with -v.
+
+# Registered Variables
+
+- Registered variables are similar to facts,with a few differences.
+- Like facts,registered variables are host-level variables.
+- However,registered variables are only stored in memory.( Ansibel facts are backed by whatever plugin you have configured )
+- Registered variables are only valid on the host for the rest of the current playbook run. 
