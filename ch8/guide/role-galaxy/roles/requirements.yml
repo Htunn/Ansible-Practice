@@ -1,0 +1,7 @@
+---
+# requirements.yml
+
+- src: git@github.com:giovtorres/ansible-role-bash-completion.git 
+  scm:  git
+  version:  master
+  name: giovtorres.bash-completion 

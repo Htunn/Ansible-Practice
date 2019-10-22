@@ -1,0 +1,13 @@
+---
+- name: use bash-completion role playbook
+  hosts: devservers
+  pre_tasks:  
+    - name: uninstall old bash-completion
+      yum:
+        name: bash-completion
+        state:  absent
+
+  roles:
+    - giovtorres.bash-completion
+
+

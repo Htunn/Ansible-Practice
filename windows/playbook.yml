@@ -1,0 +1,11 @@
+---
+- name: create a windows user
+  hosts: windows10
+  tasks:
+    - name: create windows user
+      win_user:
+        name: eimon
+        password: Pa$$w0rd
+        state: present
+        groups:
+          - Users
