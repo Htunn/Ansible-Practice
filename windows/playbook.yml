@@ -4,7 +4,7 @@
   tasks:
     - name: create windows user
       win_user:
-        name: eimon
+        name: sainaung
         password: Pa$$w0rd
         state: present
         groups:
