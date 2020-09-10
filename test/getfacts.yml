@@ -3,4 +3,4 @@
   hosts: all
   tasks:
    - debug:
-        vars: ansible_facts 
+        var: ansible_facts 
